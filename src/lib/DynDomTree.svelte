@@ -2,6 +2,7 @@
 import { currentPath } from "../stores";
 
 import { createEventDispatcher } from "svelte";
+import { childrenIdx, classIdx, tagIdx } from "$lib/utils";
 
 
     
@@ -42,7 +43,7 @@ import { createEventDispatcher } from "svelte";
     on:click|stopPropagation={()=>{currentPath.set(idx)}}
     >
     {#each children as child, index}
-        <svelte:self tag={child[0]} idx={[...idx, index]} classes={child[1]} children={child.length===2?[]:child[2]}/>
+        <svelte:self tag={child[tagIdx]} idx={[...idx, index]} classes={child[classIdx]} children={child.length===2?[]:child[childrenIdx]}/>
     {/each}
 </svelte:element>
 

@@ -27,8 +27,20 @@ export function clickOutside(node) {
 	}
 }
 
+
+/** Dispatch event on resize of node */
+/**
+ * 
+ * @param {Node} node 
+ */
 export function resize(node) {
+  /**
+   * @type DOMRectReadOnly
+   */
   let CR
+  /**
+   * @type Element
+   */
   let ET
   const ro = new ResizeObserver((entries, observer) => {
       for (let entry of entries) {

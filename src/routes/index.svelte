@@ -1,16 +1,16 @@
 <script>
 	import Draggable from '$lib/Draggable.svelte';
 	import DynDomTree from '$lib/DynDomTree.svelte';
-	import { clickOutside, htmlTags, resize } from '$lib/utils';
+	import { childrenIdx, classIdx, clickOutside, htmlTags, resize, tagIdx } from '$lib/utils';
 	import { generateStyles } from '$lib/windirunner';
-import { onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { currentPath } from '../stores';
 
 	/**
 	 * @type {[string, string]}
 	 */
 	let default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400'];
-	
+
 	/**
 	 * @type {[import('$lib/utils').treeNode]}
 	 */
@@ -46,18 +46,17 @@ import { onMount } from 'svelte';
 	let showInfo = false;
 	let showDefault = false;
 
-	onMount(()=>{
+	onMount(() => {
 		return currentPath.subscribe((path) => {
 			if (path != null) {
 				elementPath = path;
 				getElement();
 			}
 		});
-	})
-
+	});
 
 	function getElement() {
-		if(elementPath===null) return; 
+		if (elementPath === null) return;
 		parent = null;
 		element = null;
 		elementIdx = null;
@@ -66,18 +65,18 @@ import { onMount } from 'svelte';
 				element = elements[idx];
 			} else {
 				parent = element;
-				element = element[2][idx];
+				element = element[childrenIdx][idx];
 			}
 			elementIdx = idx;
 		}
-		if(element===null)return
-		className = element[1];
-		elementType = element[0];
+		if (element === null) return;
+		className = element[classIdx];
+		elementType = element[tagIdx];
 	}
 	function setElement() {
 		if (element != null) {
-			element[0] = elementType;
-			element[1] = className;
+			element[tagIdx] = elementType;
+			element[classIdx] = className;
 			elements = [...elements];
 		}
 	}
@@ -85,17 +84,13 @@ import { onMount } from 'svelte';
 	 * @param {'Above'|'Inside'|'Below'} position
 	 */
 	function addElement(position) {
-		const newNode = [
-				...(!clone
-					? [...default_element, []]
-					: [elementType, className, []])
-			]
-		if (position === 'Above' && parent!=null && elementIdx!=null) {
-			parent[2].splice(elementIdx, 0, newNode);
-		} else if (position === 'Inside' && element!=null) {
-			element[2].push(newNode);
-		} else if (position === 'Below' && elementIdx!=null && parent!=null) {
-			parent[2].splice(elementIdx + 1, 0, newNode);
+		const newNode = [...(!clone ? [...default_element, []] : [elementType, className, []])];
+		if (position === 'Above' && parent != null && elementIdx != null) {
+			parent[childrenIdx].splice(elementIdx, 0, newNode);
+		} else if (position === 'Inside' && element != null) {
+			element[childrenIdx].push(newNode);
+		} else if (position === 'Below' && elementIdx != null && parent != null) {
+			parent[childrenIdx].splice(elementIdx + 1, 0, newNode);
 		}
 		elements = [...elements];
 	}
@@ -103,18 +98,19 @@ import { onMount } from 'svelte';
 		if (elementPath !== null) {
 			setElement();
 		}
-		const flattened = elements.flat(30)
+		const flattened = elements.flat(30);
 		let styles = generateStyles(flattened.filter((e) => !htmlTags.includes(e)).join(' '));
 		if (dyStyle === null) {
 			dyStyle = document.createElement('style');
 			dyStyle.innerHTML = styles;
-			document.getElementsByTagName('head')[0].appendChild(dyStyle);
+			document.getElementsByTagName('head')[tagIdx].appendChild(dyStyle);
 		}
 		dyStyle.innerHTML = styles;
 	}
 </script>
 
 <span class="z-20 absolute bottom-0 right-0 flex flex-col">
+	<!-- About the page -->
 	{#if showInfo}
 		<div
 			use:clickOutside
@@ -123,11 +119,16 @@ import { onMount } from 'svelte';
 			}}
 			class="text-white rounded-lg mb-4 mr-4 bg-cool-gray-500 bg-opacity-60 p-6 min-h-50 max-w-70 border border-transparent hover:border-white shadow-lg"
 		>
-			Hi 😅 this is just a random website I made that 3 AM to test windi-css out and do quick
-			experiments. Look around and try some stuff
+			Hi 😅 this is just a random website I made that 3 AM to quickly test WindiCSS out.
+			Its primarily meant to be an introduction and training tool for new devs.
+			Look around and try some stuff, if you have any changes in feel free to open a PR!
+
+			Yes there aren't any instructions here rn, but you'll eventually find them in the README.md file.
 		</div>
 	{/if}
 
+
+	<!-- Default element editor -->
 	{#if showDefault}
 		<div
 			use:clickOutside
@@ -140,7 +141,7 @@ import { onMount } from 'svelte';
 				<div class="flex flex-col">
 					<span>Classes</span>
 					<textarea
-						bind:value={default_element[1]}
+						bind:value={default_element[classIdx]}
 						on:resize={() => {
 							disable_drag = true;
 						}}
@@ -156,31 +157,36 @@ import { onMount } from 'svelte';
 				<div class="flex flex-col">
 					<span>Type</span>
 					<select
-						bind:value={default_element[0]}
+						bind:value={default_element[tagIdx]}
 						on:change={updateStyle}
 						class=" font-semibold bg-white p-4 rounded-md text-gray-600 border-gray-400 border rounded-lg focus:border-blue-400"
 					>
-						<option value="">nothing selected</option>
-						<option value="div">div</option>
-						<option value="input">input</option>
-						<option value="textarea">textarea</option>
-						<option value="button">button</option>
+						{#each htmlTags as tag}
+							<option value={tag}>{tag}</option>
+						{/each}
 					</select>
 				</div>
 			</div>
 		</div>
 	{/if}
+
+	<!-- Footer Bar -->
+
 	<span class="flex justify-end text-xl">
+		<a title="WindiCSS" target="_blank" href="https://windicss.org" class="flex justify-center items-center h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 opacity-40 hover:bg-opacity-60 hover:fill-white hover:opacity-60 !active:opacity-100 border active:border-white">
+			<img class="p-2" src="https://windicss.org/assets/logo.svg" alt="WindiCSS url"/>    
+		</a>
 		<button
+			title="Default Element"
 			on:click={() => {
 				showDefault = !showDefault;
 			}}
-			class="h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white"
-		>
-			⚙
+			class="h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white">
+			<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" class="p-2" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path fill="currentColor" d="M18.1 11c-3.9 0-7 3.1-7 7s3.1 7 7 7s7-3.1 7-7s-3.1-7-7-7zm0 12c-2.8 0-5-2.2-5-5s2.2-5 5-5s5 2.2 5 5s-2.2 5-5 5z" class="clr-i-outline clr-i-outline-path-1"/><path fill="currentColor" d="m32.8 14.7l-2.8-.9l-.6-1.5l1.4-2.6c.3-.6.2-1.4-.3-1.9l-2.4-2.4c-.5-.5-1.3-.6-1.9-.3l-2.6 1.4l-1.5-.6l-.9-2.8C21 2.5 20.4 2 19.7 2h-3.4c-.7 0-1.3.5-1.4 1.2L14 6c-.6.1-1.1.3-1.6.6L9.8 5.2c-.6-.3-1.4-.2-1.9.3L5.5 7.9c-.5.5-.6 1.3-.3 1.9l1.3 2.5c-.2.5-.4 1.1-.6 1.6l-2.8.9c-.6.2-1.1.8-1.1 1.5v3.4c0 .7.5 1.3 1.2 1.5l2.8.9l.6 1.5l-1.4 2.6c-.3.6-.2 1.4.3 1.9l2.4 2.4c.5.5 1.3.6 1.9.3l2.6-1.4l1.5.6l.9 2.9c.2.6.8 1.1 1.5 1.1h3.4c.7 0 1.3-.5 1.5-1.1l.9-2.9l1.5-.6l2.6 1.4c.6.3 1.4.2 1.9-.3l2.4-2.4c.5-.5.6-1.3.3-1.9l-1.4-2.6l.6-1.5l2.9-.9c.6-.2 1.1-.8 1.1-1.5v-3.4c0-.7-.5-1.4-1.2-1.6zm-.8 4.7l-3.6 1.1l-.1.5l-.9 2.1l-.3.5l1.8 3.3l-2 2l-3.3-1.8l-.5.3c-.7.4-1.4.7-2.1.9l-.5.1l-1.1 3.6h-2.8l-1.1-3.6l-.5-.1l-2.1-.9l-.5-.3l-3.3 1.8l-2-2l1.8-3.3l-.3-.5c-.4-.7-.7-1.4-.9-2.1l-.1-.5L4 19.4v-2.8l3.4-1l.2-.5c.2-.8.5-1.5.9-2.2l.3-.5l-1.7-3.3l2-2l3.2 1.8l.5-.3c.7-.4 1.4-.7 2.2-.9l.5-.2L16.6 4h2.8l1.1 3.5l.5.2c.7.2 1.4.5 2.1.9l.5.3l3.3-1.8l2 2l-1.8 3.3l.3.5c.4.7.7 1.4.9 2.1l.1.5l3.6 1.1v2.8z" class="clr-i-outline clr-i-outline-path-2"/><path fill="none" d="M0 0h36v36H0z"/></svg>
 		</button>
 
 		<button
+			title="Reset Everything"
 			on:click={() => {
 				default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400'];
 				elements = [[...default_element, []]];
@@ -188,34 +194,34 @@ import { onMount } from 'svelte';
 				disable_drag = false;
 				elementPath = null;
 				elementIdx = null;
-				parent=null;
+				parent = null;
 				className = '';
 				elementType = '';
 				clone = false;
-				showDropDown=false;
+				showDropDown = false;
 				showInfo = false;
 				showDefault = false;
 			}}
-			class=" h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white"
-		>
+			class=" h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white">
 			⭯
 		</button>
 		<button
+			title="About"
 			on:click={() => {
 				showInfo = !showInfo;
 			}}
-			class="h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white"
-		>
+			class="h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white">
 			?
 		</button>
 
 		<a
+			target="_blank"
 			href="https://github.com/taha-firoz/windi-playground"
 			aria-label="Homepage"
 			class="flex justify-center items-center h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 opacity-40 hover:bg-opacity-60 hover:fill-white hover:opacity-60 !active:opacity-100 border active:border-white"
-			title="GitHub"
+			title="GitHub Source"
 		>
-			<svg aria-hidden="true" class="h-8 w-8 " version="1.1" viewBox="0 0 16 16"
+			<svg aria-hidden="true" class="p-2" version="1.1" viewBox="0 0 16 16"
 				><path
 					fill-rule="evenodd"
 					d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"
@@ -224,6 +230,9 @@ import { onMount } from 'svelte';
 		</a>
 	</span>
 </span>
+
+
+<!-- Floating CSS Editor Window -->
 {#if elementPath !== null}
 	<Draggable disabled={disable_drag}>
 		<div class="flex flex-col text-lg font-bold text-cool-gray-500 px-8 py-8 min-w-100">
@@ -260,11 +269,9 @@ import { onMount } from 'svelte';
 						on:change={updateStyle}
 						class=" font-semibold bg-white p-4 rounded-md text-gray-600 border-gray-400 border rounded-lg focus:border-blue-400"
 					>
-						<option value="">nothing selected</option>
-						<option value="div">div</option>
-						<option value="input">input</option>
-						<option value="textarea">textarea</option>
-						<option value="button">button</option>
+						{#each htmlTags as tag}
+							<option value={tag}>{tag}</option>
+						{/each}
 					</select>
 				</div>
 				<div class="flex flex-col">
@@ -319,12 +326,12 @@ import { onMount } from 'svelte';
 									disabled={parent === null}
 									on:click={() => {
 										showDropDown = false;
-										if(parent!=null){
-											parent[2] = [...parent[2].filter(
-												(element, index) => index !== elementIdx
-											)];
+										if (parent != null) {
+											parent[childrenIdx] = [
+												...parent[childrenIdx].filter((element, index) => index !== elementIdx)
+											];
 										}
-										elements = [...elements]
+										elements = [...elements];
 										elementPath = null;
 									}}
 									class="disabled:bg-cool-gray-200 disabled:cursor-not-allowed hover:bg-gray-400 active:bg-blue-600 p-4 w-full "
@@ -334,10 +341,11 @@ import { onMount } from 'svelte';
 								<span class="w-full h-2 border-b-2 border-gray-400 mb-2" />
 								<button
 									on:click={() => {
-										elementType = element[0] = default_element[0];
-										className = element[1] = default_element[1];
-										elements = [...elements];
-										
+										if (element != null) {
+											elementType = element[tagIdx] = default_element[tagIdx];
+											className = element[classIdx] = default_element[classIdx];
+											elements = [...elements];
+										}
 									}}
 									class="hover:bg-gray-400 active:bg-blue-600 p-4 w-full "
 								>
@@ -352,6 +360,13 @@ import { onMount } from 'svelte';
 	</Draggable>
 {/if}
 
+
+<!-- Render elements -->
 <div class="z-0 h-screen flex flex-col justify-center items-center bg-gray-800 dots overflow-auto">
-	<DynDomTree idx={[0]} tag={elements[0][0]} classes={elements[0][1]} children={elements[0][2]} />
+	<DynDomTree
+		idx={[tagIdx]}
+		tag={elements[tagIdx][tagIdx]}
+		classes={elements[tagIdx][classIdx]}
+		children={elements[tagIdx][childrenIdx]}
+	/>
 </div>
