@@ -82,7 +82,8 @@
 		if (elementPath !== null) {
 			setElement();
 		}
-		let styles = generateStyles(elements.map((e) => e[1]).join(' '));
+		const flattened = elements.flat(30)
+		let styles = generateStyles(flattened.filter((e) => !["div", "input", "textarea", "button"].includes(e)).join(' '));
 		if (dyStyle === null) {
 			dyStyle = document.createElement('style');
 			dyStyle.type = 'text/css';
