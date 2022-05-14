@@ -1,6 +1,6 @@
 .dots {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.233), transparent 11%),
-    radial-gradient(rgba(255, 255, 255, 0.233), transparent 11%);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.493), transparent 11%),
+    radial-gradient(rgba(255, 255, 255, 0.651), transparent 11%);
     background-size: 10px 10px;
     background-position: 0 0, 30px 30px;
     background-repeat: repeat;
