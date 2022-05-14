@@ -46,3 +46,14 @@ export function resize(node) {
       }
   }
 }
+
+/**
+ * @typedef {[string, string, treeNode[]]} treeNode
+ */
+
+
+export const htmlTags =  ["div", "input", "textarea", "button"]
+
+export const tagIdx = 0
+export const classIdx = 1
+export const childrenIdx = 2

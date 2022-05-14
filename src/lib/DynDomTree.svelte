@@ -22,7 +22,7 @@ import { createEventDispatcher } from "svelte";
     export let classes
 
     /**
-     * @type {[string, string][]| [string, string,[]][]} children
+     * @type {import('$lib/utils').treeNode[]} children
      */
     export let children = []
 

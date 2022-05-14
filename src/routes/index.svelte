@@ -1,12 +1,23 @@
 <script>
 	import Draggable from '$lib/Draggable.svelte';
 	import DynDomTree from '$lib/DynDomTree.svelte';
-	import { clickOutside, resize } from '$lib/utils';
+	import { clickOutside, htmlTags, resize } from '$lib/utils';
 	import { generateStyles } from '$lib/windirunner';
+import { onMount } from 'svelte';
 	import { currentPath } from '../stores';
-	let default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400'];
 
+	/**
+	 * @type {[string, string]}
+	 */
+	let default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400'];
+	
+	/**
+	 * @type {[import('$lib/utils').treeNode]}
+	 */
 	let elements = [[...default_element, []]];
+	/**
+	 * @type {HTMLStyleElement|null}
+	 */
 	let dyStyle = null;
 	let disable_drag = false;
 
@@ -14,8 +25,17 @@
 	 * @type {number[] | null}
 	 */
 	let elementPath = null;
+	/**
+	 * @type {import('$lib/utils').treeNode | null}
+	 */
 	let element = null;
+	/**
+	 * @type {number | null}
+	 */
 	let elementIdx = null;
+	/**
+	 * @type {import('$lib/utils').treeNode | null}
+	 */
 	let parent = null;
 
 	let className = '';
@@ -23,16 +43,21 @@
 	let clone = false;
 
 	let showDropDown = false;
-	let show_info = false;
-	let show_default = false;
-	currentPath.subscribe((path) => {
-		if (path != null) {
-			elementPath = path;
-			getElement();
-		}
-	});
+	let showInfo = false;
+	let showDefault = false;
+
+	onMount(()=>{
+		return currentPath.subscribe((path) => {
+			if (path != null) {
+				elementPath = path;
+				getElement();
+			}
+		});
+	})
+
 
 	function getElement() {
+		if(elementPath===null) return; 
 		parent = null;
 		element = null;
 		elementIdx = null;
@@ -45,6 +70,7 @@
 			}
 			elementIdx = idx;
 		}
+		if(element===null)return
 		className = element[1];
 		elementType = element[0];
 	}
@@ -55,26 +81,21 @@
 			elements = [...elements];
 		}
 	}
-
+	/**
+	 * @param {'Above'|'Inside'|'Below'} position
+	 */
 	function addElement(position) {
-		if (position === 'Above') {
-			parent[2].splice(elementIdx, 0, [
+		const newNode = [
 				...(!clone
 					? [...default_element, []]
 					: [elementType, className, []])
-			]);
-		} else if (position === 'Inside') {
-			element[2].push([
-				...(!clone
-					? [...default_element, []]
-					: [elementType, className, []])
-			]);
-		} else if (position === 'Below') {
-			parent[2].splice(elementIdx + 1, 0, [
-				...(!clone
-					? [...default_element, []]
-					: [elementType, className, []])
-			]);
+			]
+		if (position === 'Above' && parent!=null && elementIdx!=null) {
+			parent[2].splice(elementIdx, 0, newNode);
+		} else if (position === 'Inside' && element!=null) {
+			element[2].push(newNode);
+		} else if (position === 'Below' && elementIdx!=null && parent!=null) {
+			parent[2].splice(elementIdx + 1, 0, newNode);
 		}
 		elements = [...elements];
 	}
@@ -83,10 +104,9 @@
 			setElement();
 		}
 		const flattened = elements.flat(30)
-		let styles = generateStyles(flattened.filter((e) => !["div", "input", "textarea", "button"].includes(e)).join(' '));
+		let styles = generateStyles(flattened.filter((e) => !htmlTags.includes(e)).join(' '));
 		if (dyStyle === null) {
 			dyStyle = document.createElement('style');
-			dyStyle.type = 'text/css';
 			dyStyle.innerHTML = styles;
 			document.getElementsByTagName('head')[0].appendChild(dyStyle);
 		}
@@ -95,11 +115,11 @@
 </script>
 
 <span class="z-20 absolute bottom-0 right-0 flex flex-col">
-	{#if show_info}
+	{#if showInfo}
 		<div
 			use:clickOutside
 			on:click_outside={() => {
-				show_info = false;
+				showInfo = false;
 			}}
 			class="text-white rounded-lg mb-4 mr-4 bg-cool-gray-500 bg-opacity-60 p-6 min-h-50 max-w-70 border border-transparent hover:border-white shadow-lg"
 		>
@@ -108,11 +128,11 @@
 		</div>
 	{/if}
 
-	{#if show_default}
+	{#if showDefault}
 		<div
 			use:clickOutside
 			on:click_outside={() => {
-				show_default = false;
+				showDefault = false;
 			}}
 			class="text-white rounded-lg mb-4 mr-4 bg-cool-gray-500 bg-opacity-60 p-6 min-h-50 min-w-70 border border-transparent hover:border-white shadow-lg flex flex-col"
 		>
@@ -153,7 +173,7 @@
 	<span class="flex justify-end text-xl">
 		<button
 			on:click={() => {
-				show_default = !show_default;
+				showDefault = !showDefault;
 			}}
 			class="h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white"
 		>
@@ -162,16 +182,19 @@
 
 		<button
 			on:click={() => {
-				elements = [[...default_element]];
+				default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400'];
+				elements = [[...default_element, []]];
 				dyStyle = null;
 				disable_drag = false;
 				elementPath = null;
-				show_default = false;
-				default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400', []];
+				elementIdx = null;
+				parent=null;
 				className = '';
 				elementType = '';
 				clone = false;
-				show_info = false;
+				showDropDown=false;
+				showInfo = false;
+				showDefault = false;
 			}}
 			class=" h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white"
 		>
@@ -179,7 +202,7 @@
 		</button>
 		<button
 			on:click={() => {
-				show_info = !show_info;
+				showInfo = !showInfo;
 			}}
 			class="h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 bg-opacity-40 hover:bg-opacity-60 hover:text-white hover:text-opacity-40 !active:text-opacity-100 border active:border-white"
 		>
@@ -296,9 +319,11 @@
 									disabled={parent === null}
 									on:click={() => {
 										showDropDown = false;
-										parent[2] = [...parent[2].filter(
-											(element, index) => index !== elementIdx
-										)];
+										if(parent!=null){
+											parent[2] = [...parent[2].filter(
+												(element, index) => index !== elementIdx
+											)];
+										}
 										elements = [...elements]
 										elementPath = null;
 									}}
