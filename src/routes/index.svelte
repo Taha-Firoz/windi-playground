@@ -45,8 +45,6 @@
 			}
 			elementIdx = idx;
 		}
-		console.log(elements)
-		console.log(parent)
 		className = element[1];
 		elementType = element[0];
 	}
