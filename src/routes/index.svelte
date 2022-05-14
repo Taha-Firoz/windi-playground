@@ -1,8 +1,8 @@
 <script>
-	import Draggable from '../lib/Draggable.svelte';
-	import { clickOutside, resize } from '../lib/utils';
-	import { generateStyles } from '../lib/windirunner';
-	import Layout from './__layout.svelte';
+
+	import Draggable from '$lib/Draggable.svelte';
+	import { clickOutside, resize } from '$lib/utils';
+	import { generateStyles } from '$lib/windirunner';
 
 	const default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400'];
 	let elements = [[...default_element]];
@@ -13,6 +13,8 @@
 	let className = '';
 	let elementType = '';
 	let clone = false;
+
+	let showDropDown = false;
 
     let show_info = false
 	function updateStyle() {
@@ -76,7 +78,7 @@
 	<Draggable disabled={disable_drag}>
 		<div class="flex flex-col text-lg font-bold text-cool-gray-500 px-8 py-8 min-w-100">
 			<span class="flex mb-6 justify-between h-10">
-				<span class="text-2xl align-middle">Tailwind Editor</span>
+				<span class="text-2xl align-middle">Windi Editor</span>
 				<button
 					on:click={() => (editable_selected = null)}
 					class="w-10 h-10 bg-gray-400 text-center rounded-xl font-bold text-white hover:bg-opacity-80 active:bg-gray-600"
@@ -119,60 +121,75 @@
 					<span>Clone</span>
 					<input class="w-4 h-4" bind:checked={clone} type="checkbox" />
 				</div>
-				<span class="flex justify-evenly">
-					<button
-						on:click={() => {
-							elements.splice(editable_selected === 0 ? 0 : editable_selected, 0, [
-								...(!clone ? default_element : [elementType, className])
-							]);
-							elements = [...elements];
-						}}
-						class="h-15 w-15 bg-blue-500 text-white text-center text-2xl rounded-xl hover:bg-opacity-90 active:bg-blue-600"
-					>
-						↑ +
-					</button>
-					<button
-						on:click={() => {
-							elements.splice(editable_selected, 0, [
-								...(!clone ? default_element : [elementType, className])
-							]);
-							elements = [...elements];
-						}}
-						class="h-15 w-15 bg-blue-500 text-white text-center text-2xl rounded-xl hover:bg-opacity-90 active:bg-blue-600"
-					>
-						+
-					</button>
-					<button
-						on:click={() => {
-							elements.splice(editable_selected, 0, [
-								...(!clone ? default_element : [elementType, className])
-							]);
-							elements = [...elements];
-						}}
-						class="h-15 w-15 bg-blue-500 text-white text-center text-2xl rounded-xl hover:bg-opacity-90 active:bg-blue-600"
-					>
-						+ ↓
-					</button>
-				</span>
+				<span class="flex justify-between items-center">
+					<span class="flex space-x-4">
 
-				<span class="flex justify-evenly space-x-20">
-					<button
-						on:click={() => {
-							elements = elements.filter((_, idx) => idx !== editable_selected);
-							editable_selected = null;
-						}}
-						class="h-15 w-full bg-blue-500 text-white text-center text-xl rounded-xl hover:bg-opacity-90 active:bg-blue-600"
-					>
-						delete element
-					</button>
-					<button
-						on:click={() => {
-							elements = [[...default_element]];
-						}}
-						class="h-15 w-full bg-blue-500 text-white text-center text-xl rounded-xl hover:bg-opacity-90 active:bg-blue-600"
-					>
-						reset
-					</button>
+						<button
+							on:click={() => {
+								elements.splice(editable_selected === 0 ? 0 : editable_selected, 0, [
+									...(!clone ? default_element : [elementType, className])
+								]);
+								elements = [...elements];
+							}}
+							class="h-15 w-15 bg-blue-500 text-white text-center text-2xl rounded-xl hover:bg-opacity-90 active:bg-blue-600"
+						>
+							↑ +
+						</button>
+						<button
+							on:click={() => {
+								elements.splice(editable_selected, 0, [
+									...(!clone ? default_element : [elementType, className])
+								]);
+								elements = [...elements];
+							}}
+							class="h-15 w-15 bg-blue-500 text-white text-center text-2xl rounded-xl hover:bg-opacity-90 active:bg-blue-600"
+						>
+							+
+						</button>
+						<button
+							on:click={() => {
+								elements.splice(editable_selected, 0, [
+									...(!clone ? default_element : [elementType, className])
+								]);
+								elements = [...elements];
+							}}
+							class="h-15 w-15 bg-blue-500 text-white text-center text-2xl rounded-xl hover:bg-opacity-90 active:bg-blue-600"
+						>
+							+ ↓
+						</button>
+					</span>
+					<span class="flex flex-col justify-center relative inline-block p-2">
+						<button on:click={()=>{
+							showDropDown = !showDropDown
+						}} class="w-15 h-15 hover:bg-gray-300 rounded-full active:bg-gray-400">
+							⋮
+						</button>
+						{#if showDropDown}
+							<span use:clickOutside on:click_outside={()=>{showDropDown = false}} class="absolute right-0 top-0 min-h-20 w-40 bg-cool-gray-200 border border-gray-400 shadow-2xl rounded-lg flex flex-col py-4">
+								<button
+									on:click={() => {
+										showDropDown = false
+										elements = elements.filter((_, idx) => idx !== editable_selected);
+										editable_selected = null;
+									}}
+									class="hover:bg-gray-400 active:bg-blue-600 p-4 w-full "
+								>
+									delete element
+								</button>
+								<span class="w-full h-2 border-b-2 border-gray-400 mb-2"></span>
+								<button
+									on:click={() => {
+										elementType= elements[editable_selected][0] = default_element[0];
+										className= elements[editable_selected][1] = default_element[1];
+										
+									}}
+									class="hover:bg-gray-400 active:bg-blue-600 p-4 w-full "
+								>
+									reset
+								</button>
+							</span>
+						{/if}
+					</span>
 				</span>
 			</div>
 		</div>
