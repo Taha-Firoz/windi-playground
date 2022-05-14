@@ -187,7 +187,7 @@
 		</button>
 
 		<a
-			href="https://github.com"
+			href="https://github.com/taha-firoz/windi-playground"
 			aria-label="Homepage"
 			class="flex justify-center items-center h-10 w-10 rounded-lg border-transparent mb-4 mr-4 bg-cool-gray-500 opacity-40 hover:bg-opacity-60 hover:fill-white hover:opacity-60 !active:opacity-100 border active:border-white"
 			title="GitHub"
