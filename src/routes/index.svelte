@@ -45,6 +45,8 @@
 			}
 			elementIdx = idx;
 		}
+		console.log(elements)
+		console.log(parent)
 		className = element[1];
 		elementType = element[0];
 	}
@@ -295,9 +297,10 @@
 									disabled={parent === null}
 									on:click={() => {
 										showDropDown = false;
-										elements = parent[2] = parent[2].filter(
+										parent[2] = [...parent[2].filter(
 											(element, index) => index !== elementIdx
-										);
+										)];
+										elements = [...elements]
 										elementPath = null;
 									}}
 									class="disabled:bg-cool-gray-200 disabled:cursor-not-allowed hover:bg-gray-400 active:bg-blue-600 p-4 w-full "
@@ -307,8 +310,10 @@
 								<span class="w-full h-2 border-b-2 border-gray-400 mb-2" />
 								<button
 									on:click={() => {
-										elementType = elements[elementPath][0] = default_element[0];
-										className = elements[elementPath][1] = default_element[1];
+										elementType = element[0] = default_element[0];
+										className = element[1] = default_element[1];
+										elements = [...elements];
+										
 									}}
 									class="hover:bg-gray-400 active:bg-blue-600 p-4 w-full "
 								>
