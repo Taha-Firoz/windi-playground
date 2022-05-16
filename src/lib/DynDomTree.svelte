@@ -2,7 +2,7 @@
 import { currentPath } from "../stores";
 
 import { createEventDispatcher } from "svelte";
-import { childrenIdx, classIdx, tagIdx } from "$lib/utils";
+import { childrenIdx, classIdx, imageIdx, tagIdx } from "$lib/utils";
 
 
     
@@ -12,6 +12,11 @@ import { childrenIdx, classIdx, tagIdx } from "$lib/utils";
      * @type {number[]} idx
      */
     export let idx
+
+    /**
+     * @type {string} image_url
+     */
+     export let image_url
     
     /**
      * @type {string} tag
@@ -27,15 +32,26 @@ import { childrenIdx, classIdx, tagIdx } from "$lib/utils";
      */
     export let children = []
 
+    console.log(children)
+
 </script>
 
 
 {#if children.length === 0}
-    <svelte:element
-        this={tag}
-        class={classes}
-        on:click|stopPropagation={()=>{currentPath.set(idx)}}
-    />
+{#if image_url !== ''}
+        <svelte:element
+            style={`background-image: url(${image_url})`}
+            this={tag}
+            class={classes}
+            on:click|stopPropagation={()=>{currentPath.set(idx)}}
+        />
+    {:else}
+        <svelte:element
+            this={tag}
+            class={classes}
+            on:click|stopPropagation={()=>{currentPath.set(idx)}}
+        />
+    {/if}
 {:else}
     <svelte:element
     this={tag}
@@ -43,7 +59,7 @@ import { childrenIdx, classIdx, tagIdx } from "$lib/utils";
     on:click|stopPropagation={()=>{currentPath.set(idx)}}
     >
     {#each children as child, index}
-        <svelte:self tag={child[tagIdx]} idx={[...idx, index]} classes={child[classIdx]} children={child.length===2?[]:child[childrenIdx]}/>
+        <svelte:self tag={child[tagIdx]} image_url={child[imageIdx]} idx={[...idx, index]} classes={child[classIdx]} children={child[childrenIdx]}/>
     {/each}
 </svelte:element>
 

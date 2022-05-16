@@ -60,7 +60,7 @@ export function resize(node) {
 }
 
 /**
- * @typedef {[string, string, treeNode[]]} treeNode
+ * @typedef {[string, string, string,treeNode[]]} treeNode
  */
 
 
@@ -68,4 +68,5 @@ export const htmlTags =  ["div", "input", "textarea", "button"]
 
 export const tagIdx = 0
 export const classIdx = 1
-export const childrenIdx = 2
+export const imageIdx = 2
+export const childrenIdx = 3

@@ -1,15 +1,21 @@
 <script>
 	import Draggable from '$lib/Draggable.svelte';
 	import DynDomTree from '$lib/DynDomTree.svelte';
-	import { childrenIdx, classIdx, clickOutside, htmlTags, resize, tagIdx } from '$lib/utils';
+	import { childrenIdx, classIdx, clickOutside, imageIdx, htmlTags, resize, tagIdx } from '$lib/utils';
 	import { generateStyles } from '$lib/windirunner';
 	import { onMount } from 'svelte';
 	import { currentPath } from '../stores';
 
+
 	/**
-	 * @type {[string, string]}
+	 * @type {[string, string, string]}
 	 */
-	let default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400'];
+	const default_reset = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400', '']
+
+	/**
+	 * @type {[string, string, string ]}
+	 */
+	let default_element = default_reset;
 
 	/**
 	 * @type {[import('$lib/utils').treeNode]}
@@ -40,6 +46,7 @@
 
 	let className = '';
 	let elementType = '';
+	let imageUrl = '';
 	let clone = false;
 
 	let showDropDown = false;
@@ -73,6 +80,7 @@
 		className = element[classIdx];
 		elementType = element[tagIdx];
 	}
+
 	function setElement() {
 		if (element != null) {
 			element[tagIdx] = elementType;
@@ -80,15 +88,37 @@
 			elements = [...elements];
 		}
 	}
+
+	function setImageURL() {
+		if (element != null) {
+			console.log(imageUrl)
+			element[imageIdx] = imageUrl;
+			elements = [...elements];
+		}
+	}
 	/**
 	 * @param {'Above'|'Inside'|'Below'} position
 	 */
 	function addElement(position) {
-		const newNode = [...(!clone ? [...default_element, []] : [elementType, className, []])];
+		/** @type {import('$lib/utils').treeNode}
+		**/
+		let newNode
+		if (clone === false){
+			newNode = [...default_element, []]
+		}else{
+			if(elementType === "div"){
+				newNode = [elementType, className, imageUrl, []]
+			}else{
+				newNode = [elementType, className, '', []]
+			}
+		}
 		if (position === 'Above' && parent != null && elementIdx != null) {
 			parent[childrenIdx].splice(elementIdx, 0, newNode);
 		} else if (position === 'Inside' && element != null) {
+			console.log(JSON.stringify(element))
 			element[childrenIdx].push(newNode);
+			console.log(JSON.stringify(element))
+
 		} else if (position === 'Below' && elementIdx != null && parent != null) {
 			parent[childrenIdx].splice(elementIdx + 1, 0, newNode);
 		}
@@ -188,7 +218,7 @@
 		<button
 			title="Reset Everything"
 			on:click={() => {
-				default_element = ['div', 'bg-blue-500 rounded w-1/5 h-80 hover:bg-red-400'];
+				default_element = default_reset;
 				elements = [[...default_element, []]];
 				dyStyle = null;
 				disable_drag = false;
@@ -278,6 +308,12 @@
 					<span>Clone</span>
 					<input class="w-4 h-4" bind:checked={clone} type="checkbox" />
 				</div>
+				{#if elementType === "div"}
+					<div class="flex flex-col">
+						<span>Image URL</span>
+						<input class="p-4 bg-white rounded-lg border border-gray-400 focus:border-blue-400" on:input={setImageURL} bind:value={imageUrl} type="text"/>
+					</div>
+				{/if}
 				<span class="flex justify-between items-center">
 					<span class="flex space-x-4">
 						<button
@@ -365,6 +401,7 @@
 <div class="z-0 h-screen flex flex-col justify-center items-center bg-gray-800 dots overflow-auto">
 	<DynDomTree
 		idx={[tagIdx]}
+		image_url={elements[tagIdx][imageIdx]}
 		tag={elements[tagIdx][tagIdx]}
 		classes={elements[tagIdx][classIdx]}
 		children={elements[tagIdx][childrenIdx]}
